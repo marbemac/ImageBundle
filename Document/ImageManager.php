@@ -115,10 +115,22 @@ class ImageManager
         return $query->execute();
     }
 
+    /*
+     * @var string|object $imageLocation
+     */
     public function saveImage($imageLocation, $createdBy = null, $groupId = null, $type = null, $parentId = null, $isOriginal = false, $width = null, $height = null, $croBoxData = null)
     {
         $imagine = new Imagine();
-        $image = $imagine->open($imageLocation);
+
+        if (is_string($imageLocation))
+        {
+            $image = $imagine->open($imageLocation);
+        }
+        else
+        {
+            $image = $imagine->load($imageLocation->getFile()->getBytes());
+        }
+
         $imageSize = $image->getSize();
 
         // Are we cropping it?
@@ -135,12 +147,30 @@ class ImageManager
         }
 
         // Add the extension if required
-        $parts = explode('.', $imageLocation);
-        if (count($parts) == 1)
+        if (is_string($imageLocation))
         {
-            $imageLocation = $imageLocation.'.'.$this->getExtension($imageLocation);
+            $parts = explode('.', $imageLocation);
+            if (count($parts) == 1)
+            {
+                $imageLocation = $imageLocation.'.'.$this->getExtension($imageLocation);
+            }
         }
+        else
+        {
+            $imageLocation = '/tmp/'.uniqid('i').'.'.$imageLocation->getExt();
+        }
+
         $image->save($imageLocation);
+
+        // Do we already have this image in the database?
+        if (is_string($imageLocation))
+        {
+            $image = $this->findImageBy(array('md5' => md5_file($imageLocation)));
+            if ($image)
+            {
+                return $image;
+            }
+        }
 
         $dbImage = $this->createImage();
         $dbImage->setWidth($width ? $width : $imageSize->getWidth());
@@ -205,12 +235,7 @@ class ImageManager
             return 'not found...';
         }
 
-        $imagine = new Imagine();
-        $newImage = $imagine->load($original->getFile()->getBytes());
-        $tmpLocation = '/tmp/'.uniqid('i', true).'.'.$original->getExt();
-        $newImage->save($tmpLocation);
-        
-        return $this->saveImage($tmpLocation, $original->getCreatedBy(), $original->getGroupId(), $original->getType(), $original->getParentId(), false, $w, $h, null);
+        return $this->saveImage($original, $original->getCreatedBy(), $original->getGroupId(), $original->getType(), $original->getParentId(), false, $w, $h, null);
     }
 
     public function getExtension($img)
