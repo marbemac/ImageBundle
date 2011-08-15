@@ -33,7 +33,14 @@ class ImageController extends ContainerAware
         $parts = explode('-', base64_decode($imageData));
 
         $image = $this->container->get('marbemac.manager.image')->findOrCreate($parts[0], $parts[1], $parts[2]);
-        $response->setContent($image->getFile()->getBytes());
+        if ($image && is_object($image))
+        {
+            $response->setContent($image->getFile()->getBytes());
+        }
+        else
+        {
+            $response = new Response('Page not found.', 404);
+        }
 
         return $response;
     }

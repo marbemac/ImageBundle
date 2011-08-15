@@ -6,6 +6,8 @@ use Doctrine\ODM\MongoDB\DocumentManager;
 use Imagine\Gd\Imagine;
 use Imagine\Image\Box;
 use Imagine\Image\Point;
+use Imagine\Exception\InvalidArgumentException;
+use Imagine\Exception\RuntimeException;
 
 class ImageManager
 {
@@ -124,11 +126,27 @@ class ImageManager
 
         if (is_string($imageLocation))
         {
-            $image = $imagine->open($imageLocation);
+            try {
+                $image = $imagine->open($imageLocation);
+            } catch (InvalidArgumentException $e) {
+                // TODO: Log exception
+                return false;
+            } catch (RuntimeException $e) {
+                // TODO: Log exception
+                return false;
+            }
         }
         else
         {
-            $image = $imagine->load($imageLocation->getFile()->getBytes());
+            try {
+                $image = $imagine->load($imageLocation->getFile()->getBytes());
+            } catch (InvalidArgumentException $e) {
+                // TODO: Log exception
+                return false;
+            } catch (RuntimeException $e) {
+                // TODO: Log exception
+                return false;
+            }
         }
 
         $imageSize = $image->getSize();
