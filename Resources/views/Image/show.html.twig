@@ -1,1 +1,1 @@
-<img src="{{ path('image_show', {'imageData': imageDataEncode(groupId, w, h)}) }}" {{ id is defined ? 'id='~id~'' : '' }} {{ class is defined ? 'class='~class~'' : '' }} />
+<img src="{{ path('image_show', {'imageData': imageDataEncode(groupId, w, h)}) }}" id="{{ id is defined ? id : '' }}" class="{{ class is defined ? class : '' }}" />
